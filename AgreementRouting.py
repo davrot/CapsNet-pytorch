@@ -6,7 +6,7 @@ class AgreementRouting(torch.nn.Module):
     b: torch.nn.Parameter
 
     def __init__(self, input_caps: int, output_caps: int, n_iterations: int) -> None:
-        super(AgreementRouting, self).__init__()
+        super().__init__()
         assert n_iterations >= 0
         self.n_iterations: int = n_iterations
         self.b: torch.nn.Parameter = torch.nn.Parameter(
