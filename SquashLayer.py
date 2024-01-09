@@ -7,4 +7,4 @@ class SquashLayer(torch.nn.Module):
 
     def forward(self, input: torch.Tensor) -> torch.Tensor:
         lengths2 = (input**2).sum(dim=2)
-        return input * (lengths2 / (1 + lengths2) / lengths2.sqrt()).unsqueeze(-1)
+        return input * (lengths2.sqrt() / (1 + lengths2)).unsqueeze(-1)

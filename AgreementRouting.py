@@ -18,7 +18,7 @@ class AgreementRouting(torch.nn.Module):
             dim=1
         )
         lengths2 = (s**2).sum(dim=2)
-        v = s * (lengths2 / (1 + lengths2) / lengths2.sqrt()).unsqueeze(-1)
+        v = s * (lengths2.sqrt() / (1 + lengths2)).unsqueeze(-1)
 
         b_batch = self.b.unsqueeze(0)
         for _ in range(0, self.n_iterations):
@@ -33,6 +33,6 @@ class AgreementRouting(torch.nn.Module):
             ).sum(dim=1)
 
             lengths2 = (s**2).sum(dim=2)
-            v = s * (lengths2 / (1 + lengths2) / lengths2.sqrt()).unsqueeze(-1)
+            v = s * (lengths2.sqrt() / (1 + lengths2)).unsqueeze(-1)
 
         return v
