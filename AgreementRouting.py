@@ -3,7 +3,8 @@ import torch
 
 class AgreementRouting(torch.nn.Module):
     n_iterations: int
-    b: torch.nn.Parameter
+    input_caps: int
+    output_caps: int
 
     def __init__(self, input_caps: int, output_caps: int, n_iterations: int) -> None:
         super().__init__()
