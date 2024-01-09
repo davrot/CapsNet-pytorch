@@ -15,7 +15,7 @@ The hyperparameters and data augmentation strategy strictly follow the paper.
 |||
 |---|---|
 |batch_size|          input batch size for training (default: 128)|
-|test-batch-size|      input batch size for testing (default: 1000)|
+|test_batch_size|      input batch size for testing (default: 1000)|
 |epochs |              number of epochs to train (default: 250)|
 |lr|                  learning rate (default: 0.001)|
 |no_cuda|               disables CUDA training|
