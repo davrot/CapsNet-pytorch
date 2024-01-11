@@ -68,12 +68,13 @@ class CapsLayer(torch.nn.Module):
         alpha = (reconstruct * input.unsqueeze(-2)).sum(
             -1
         )  # alpha: B, in_caps, out_caps, --in_dim--
-        alpha = alpha / (alpha.sum(dim=-1, keepdim=True) + 1e-20)
+        # alpha = alpha / (alpha.sum(dim=-1, keepdim=True) + 1e-20)
 
         output = (h * alpha.unsqueeze(-1)).sum(
             -3
         )  # output: B, --in_caps--, out_caps, out_dim
 
+        output = output / (output.sum(dim=-1, keepdim=True) + 1e-20)
         return output
 
 

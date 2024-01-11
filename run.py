@@ -1,5 +1,8 @@
 import torch
 
+from torch.utils.tensorboard import SummaryWriter
+
+
 from data_loader import data_loader
 from network import network
 from MarginLoss import MarginLoss
@@ -15,10 +18,13 @@ torch_device: torch.device = (
     torch.device("cuda:0") if torch.cuda.is_available() else torch.device("cpu")
 )
 
+dataset = "fashion-mnist"
+tb = SummaryWriter()
+
 # Parameter
 batch_size: int = 128
 test_batch_size: int = 1000
-epochs: int = 250
+epochs: int = 100
 lr: float = 0.001
 seed: int = 1
 log_interval: int = 10
@@ -60,7 +66,7 @@ if use_gpu:
     torch.cuda.manual_seed(seed)
 
 train_loader, test_loader = data_loader(
-    batch_size=batch_size, test_batch_size=test_batch_size
+    dataset=dataset, batch_size=batch_size, test_batch_size=test_batch_size
 )
 
 model, probability_layer_position, mask_layer_position = network(
@@ -106,7 +112,7 @@ for epoch in range(1, epochs + 1):
         log_interval=log_interval,
     )
 
-    test_loss = test(
+    test_loss, test_error = test(
         model=model,
         test_loader=test_loader,
         torch_device=torch_device,
@@ -117,6 +123,10 @@ for epoch in range(1, epochs + 1):
         reconstruction_alpha=reconstruction_alpha,
         mask_reconstruction=mask_reconstruction,
     )
+
+    tb.add_scalar("loss", test_loss, epoch)
+    tb.add_scalar("error", test_error, epoch)
+    tb.flush()
 
     scheduler.step(test_loss)
 

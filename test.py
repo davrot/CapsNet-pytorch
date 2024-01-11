@@ -51,4 +51,5 @@ def test(
             f"Accuracy: {correct}/{len(test_loader.dataset)} "
             f"({100.0 * correct / len(test_loader.dataset):.0f}%)\n"
         )
-        return test_loss
+        test_error = 100.0 - float(100.0 * correct / len(test_loader.dataset))
+        return test_loss, test_error

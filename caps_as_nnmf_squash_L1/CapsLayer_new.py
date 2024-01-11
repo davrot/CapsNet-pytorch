@@ -98,13 +98,14 @@ class CapsLayer(NNMFLayer):
     def routing(self, x):
         reconstruct = self._reconstruct(self.h)
         alpha = torch.einsum("bid,bid->bi", reconstruct, x)
-        alpha = F.normalize(alpha, p=1, dim=-1)
+        # alpha = F.normalize(alpha, p=1, dim=-1)
         return alpha
 
     def forward(self, input: torch.Tensor) -> torch.Tensor:
         super().forward(input)
         alpha = self.routing(input)
         output = torch.einsum("biof,bi->bof", self.h, alpha)
+        output = F.normalize(output, p=1, dim=-1)
         return output
 
     def norm_weights(self) -> None:

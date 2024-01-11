@@ -1,10 +1,9 @@
 import torch
 from ProbabilityLayer import ProbabilityLayer
 from MaskLayer import MaskLayer
-from SquashLayer_mod import SquashLayer
 from PrimaryCapsReshapeLayer import PrimaryCapsReshapeLayer
-from CapsLayer_nnmf import CapsLayer
-# from CapsLayer_new import CapsLayer
+# from CapsLayer_nnmf import CapsLayer
+from CapsLayer_new import CapsLayer
 
 
 def network(
@@ -65,9 +64,6 @@ def network(
             threshold=nnmf_threshold,
         )
     )
-    model.append(torch.nn.ReLU())
-    model.append(SquashLayer())
-    model.append(torch.nn.ReLU())
     probability_layer_position: int = len(model)
     model.append(ProbabilityLayer())
 
