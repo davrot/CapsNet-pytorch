@@ -3,7 +3,8 @@ import torch
 
 class AgreementRouting(torch.nn.Module):
     n_iterations: int
-    b: torch.nn.Parameter
+    input_caps: int
+    output_caps: int
 
     def __init__(self, input_caps: int, output_caps: int, n_iterations: int) -> None:
         super().__init__()
@@ -12,9 +13,11 @@ class AgreementRouting(torch.nn.Module):
         self.input_caps: int = input_caps
         self.output_caps: int = output_caps
 
-
     def forward(self, input: torch.Tensor) -> torch.Tensor:
-        b = torch.zeros((self.input_caps, self.output_caps)).to(input.device)
+        b: torch.Tensor = torch.zeros(
+            (self.input_caps, self.output_caps), device=input.device, dtype=input.dtype
+        )
+        
         s = (torch.nn.functional.softmax(b, dim=-1).unsqueeze(2) * input).sum(
             dim=1
         )

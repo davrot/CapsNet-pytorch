@@ -11,7 +11,7 @@ class CapsLayer(torch.nn.Module):
     def __init__(
         self, input_caps: int, input_dim: int, output_caps: int, output_dim: int
     ) -> None:
-        super(CapsLayer, self).__init__()
+        super().__init__()
         self.input_dim: int = input_dim
         self.input_caps: int = input_caps
         self.output_dim: int = output_dim
