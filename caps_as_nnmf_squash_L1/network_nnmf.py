@@ -4,7 +4,7 @@ from MaskLayer import MaskLayer
 from SquashLayer_mod import SquashLayer
 from PrimaryCapsReshapeLayer import PrimaryCapsReshapeLayer
 from CapsLayer_nnmf import CapsLayer
-from AgreementRouting_mod import AgreementRouting
+# from AgreementRouting_mod import AgreementRouting
 
 
 def network(
@@ -70,13 +70,6 @@ def network(
     )
     model.append(torch.nn.ReLU())
     model.append(SquashLayer())
-    model.append(
-        AgreementRouting(
-            input_caps=number_of_primary_caps,
-            output_caps=number_of_classes,
-            n_iterations=routing_iterations,
-        )
-    )
     model.append(torch.nn.ReLU())
     probability_layer_position: int = len(model)
     model.append(ProbabilityLayer())

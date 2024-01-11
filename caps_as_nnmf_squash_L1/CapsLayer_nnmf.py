@@ -29,7 +29,7 @@ class CapsLayer(torch.nn.Module):
         self.number_of_iterations: int = number_of_iterations
 
         self.weights: torch.nn.Parameter = torch.nn.Parameter(
-            torch.Tensor(input_caps, input_dim, output_caps * output_dim)
+            torch.Tensor(input_caps, output_caps, input_dim, output_dim)
         )
 
         torch.nn.init.uniform_(
@@ -64,16 +64,16 @@ class CapsLayer(torch.nn.Module):
     def forward(self, input: torch.Tensor) -> torch.Tensor:
         input = input / (input.sum(dim=-1, keepdim=True) + 1e-20)
 
-        output = self.functional_nnmf_sbs_bp(
+        h = self.functional_nnmf_sbs_bp(
             input, self.weights, self.number_of_iterations
         )
 
-        output = output.reshape(
-            input.shape[0],
-            input.shape[1],
-            self.output_caps,
-            self.output_dim,
-        )
+        # Routing
+        reconstruct = (h.unsqueeze(-2) * self.weights).sum(-1) # alpha: B, in_caps, out_caps, in_dim, --out_dim--
+        alpha = (reconstruct * input.unsqueeze(-2)).sum(-1) # alpha: B, in_caps, out_caps, --in_dim--
+        alpha = alpha / (alpha.sum(dim=-1, keepdim=True) + 1e-20)
+
+        output = (h * alpha.unsqueeze(-1)).sum(-3) # output: B, --in_caps--, out_caps, out_dim
 
         return output
 
@@ -84,7 +84,7 @@ class FunctionalNNMFSbSBP(torch.autograd.Function):
         ctx, input: torch.Tensor, weights: torch.Tensor, number_of_iterations: int
     ) -> torch.Tensor:
         output = torch.full(
-            (input.shape[0], input.shape[1], weights.shape[-1]),
+            (input.shape[0], input.shape[1], weights.shape[-3], weights.shape[-1]),
             1.0 / float(weights.shape[-1]),
             dtype=input.dtype,
             device=input.device,
@@ -93,8 +93,8 @@ class FunctionalNNMFSbSBP(torch.autograd.Function):
         for _ in range(0, number_of_iterations):
             h_w = output.unsqueeze(-2) * weights.unsqueeze(0)
             h_w = h_w / (h_w.sum(dim=-1, keepdim=True) + 1e-20)
-            h_w = (h_w * input.unsqueeze(-1)).sum(dim=-2)
-            output = h_w / (h_w.sum(dim=-1, keepdim=True) + 1e-20)
+            h_w = (h_w * input.unsqueeze(-2).unsqueeze(-1)).sum(dim=-2) # input: B, in_caps, in_dim => B, in_caps, 1, in_dim, 1
+            output = h_w / (h_w.sum(dim=-1, keepdim=True) + 1e-20) # h: B, in_caps, out_caps, <out_dim>
 
         ctx.save_for_backward(
             input,
@@ -135,7 +135,7 @@ class FunctionalNNMFSbSBP(torch.autograd.Function):
             1.0 / (backprop_bigr + 1e-20)
         ).unsqueeze(-1)
 
-        grad_input = (backprop_z * grad_output.unsqueeze(-2)).sum(-1)
+        grad_input = (backprop_z * grad_output.unsqueeze(-2)).sum(-1).sum(-2)
 
         del backprop_z
 
@@ -143,7 +143,7 @@ class FunctionalNNMFSbSBP(torch.autograd.Function):
         # Backprop
         # #################################################
         backprop_f: torch.Tensor = output.unsqueeze(-2) * (
-            input / (backprop_bigr**2 + 1e-20)
+            input.unsqueeze(-2) / (backprop_bigr**2 + 1e-20)
         ).unsqueeze(-1)
 
         result_omega: torch.Tensor = backprop_bigr.unsqueeze(
