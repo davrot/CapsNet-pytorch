@@ -18,6 +18,7 @@ def train(
     log_interval: int,
 ) -> None:
     model.train()
+    total_loss: float = 0.0
     for batch_idx, (data, target) in enumerate(train_loader):
         data = data.to(torch_device)
         target = target.to(torch_device)
@@ -51,3 +52,7 @@ def train(
                 f"({100.0 * batch_idx * len(data)/ len(train_loader.dataset):.0f}%)]"
                 f"\tLoss: {loss.item():.6f}"
             )
+        
+        total_loss += loss.item()
+    epoch_loss = total_loss / len(train_loader)
+    return epoch_loss

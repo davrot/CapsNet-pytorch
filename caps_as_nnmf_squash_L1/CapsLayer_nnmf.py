@@ -17,7 +17,6 @@ class CapsLayer(torch.nn.Module):
         output_caps: int,
         output_dim: int,
         threshold: float = 0.00001,
-        weight_noise_range: list[float] = [0.0, 1.0],
         number_of_iterations: int = 5,
     ) -> None:
         super().__init__()
@@ -32,11 +31,7 @@ class CapsLayer(torch.nn.Module):
             torch.Tensor(input_caps, output_caps, input_dim, output_dim)
         )
 
-        torch.nn.init.uniform_(
-            self.weights,
-            a=float(weight_noise_range[0]),
-            b=float(weight_noise_range[1]),
-        )
+        torch.nn.init.uniform_(self.weights, a=0.0, b=1.0)
 
         self.norm_weights()
 
@@ -64,16 +59,20 @@ class CapsLayer(torch.nn.Module):
     def forward(self, input: torch.Tensor) -> torch.Tensor:
         input = input / (input.sum(dim=-1, keepdim=True) + 1e-20)
 
-        h = self.functional_nnmf_sbs_bp(
-            input, self.weights, self.number_of_iterations
-        )
+        h = self.functional_nnmf_sbs_bp(input, self.weights, self.number_of_iterations)
 
         # Routing
-        reconstruct = (h.unsqueeze(-2) * self.weights).sum(-1) # alpha: B, in_caps, out_caps, in_dim, --out_dim--
-        alpha = (reconstruct * input.unsqueeze(-2)).sum(-1) # alpha: B, in_caps, out_caps, --in_dim--
+        reconstruct = (h.unsqueeze(-2) * self.weights).sum(
+            -1
+        )  # alpha: B, in_caps, out_caps, in_dim, --out_dim--
+        alpha = (reconstruct * input.unsqueeze(-2)).sum(
+            -1
+        )  # alpha: B, in_caps, out_caps, --in_dim--
         alpha = alpha / (alpha.sum(dim=-1, keepdim=True) + 1e-20)
 
-        output = (h * alpha.unsqueeze(-1)).sum(-3) # output: B, --in_caps--, out_caps, out_dim
+        output = (h * alpha.unsqueeze(-1)).sum(
+            -3
+        )  # output: B, --in_caps--, out_caps, out_dim
 
         return output
 
@@ -93,8 +92,12 @@ class FunctionalNNMFSbSBP(torch.autograd.Function):
         for _ in range(0, number_of_iterations):
             h_w = output.unsqueeze(-2) * weights.unsqueeze(0)
             h_w = h_w / (h_w.sum(dim=-1, keepdim=True) + 1e-20)
-            h_w = (h_w * input.unsqueeze(-2).unsqueeze(-1)).sum(dim=-2) # input: B, in_caps, in_dim => B, in_caps, 1, in_dim, 1
-            output = h_w / (h_w.sum(dim=-1, keepdim=True) + 1e-20) # h: B, in_caps, out_caps, <out_dim>
+            h_w = (h_w * input.unsqueeze(-2).unsqueeze(-1)).sum(
+                dim=-2
+            )  # input: B, in_caps, in_dim => B, in_caps, 1, in_dim, 1
+            output = h_w / (
+                h_w.sum(dim=-1, keepdim=True) + 1e-20
+            )  # h: B, in_caps, out_caps, <out_dim>
 
         ctx.save_for_backward(
             input,

@@ -1,5 +1,8 @@
 models/
+model/
 runs/
+*.bash
+log/
 #official python gitignore
 # Byte-compiled / optimized / DLL files
 __pycache__/

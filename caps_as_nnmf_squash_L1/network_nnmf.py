@@ -4,7 +4,7 @@ from MaskLayer import MaskLayer
 from SquashLayer_mod import SquashLayer
 from PrimaryCapsReshapeLayer import PrimaryCapsReshapeLayer
 from CapsLayer_nnmf import CapsLayer
-# from AgreementRouting_mod import AgreementRouting
+# from CapsLayer_new import CapsLayer
 
 
 def network(
@@ -22,11 +22,9 @@ def network(
     fc1_out_features: int = 512,
     fc2_out_features: int = 1024,
     fc3_out_features: int = 784,
-    routing_iterations: int = 3,
     with_reconstruction: bool = True,
     nnmf_number_of_iterations: int = 5,
     nnmf_threshold: float = 0.00001,
-    nnmf_weight_noise_range: list[float] = [0.0, 1.0],
 ) -> tuple[torch.nn.Sequential, int, int, int]:
     fc1_in_features: int = caps_layer_output_dim * number_of_classes
     number_of_primary_caps: int = primary_caps_output_caps * number_of_primary_caps_yx
@@ -65,7 +63,6 @@ def network(
             output_dim=caps_layer_output_dim,
             number_of_iterations=nnmf_number_of_iterations,
             threshold=nnmf_threshold,
-            weight_noise_range=nnmf_weight_noise_range,
         )
     )
     model.append(torch.nn.ReLU())
